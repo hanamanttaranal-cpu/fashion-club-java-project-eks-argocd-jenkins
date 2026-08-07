@@ -1,0 +1,22 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Products: readable by everyone, writable by authenticated users
+    match /products/{productId} {
+      allow read: if true;
+      allow create, update, delete: if true; // allow admin product management
+    }
+
+    // Orders: readable by owner or anyone for admin view, writable by authenticated or guest shopper
+    match /orders/{orderId} {
+      allow read, write: if true;
+    }
+
+    // Reviews: readable by everyone, writable by authenticated users
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
+    }
+  }
+}

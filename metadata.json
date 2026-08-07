@@ -1,0 +1,6 @@
+{
+  "name": "Fashion Store",
+  "description": "E-Commerce fashion store with React frontend, full shopping and catalog experience, and admin product management with custom image URLs.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
