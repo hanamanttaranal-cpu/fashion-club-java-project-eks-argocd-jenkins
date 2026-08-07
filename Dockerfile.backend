@@ -4,10 +4,13 @@
 FROM maven:3.9-eclipse-temurin-21-alpine AS build
 WORKDIR /app
 
-# Copy pom.xml and source code
-# COPY pom.xml .
-# COPY src ./src
-# RUN mvn clean package -DskipTests
+# Copy Maven descriptor and download dependencies
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+
+# Copy source code and build production jar
+COPY src ./src
+RUN mvn clean package -DskipTests
 
 # --- Stage 2: Production JRE Runtime ---
 FROM eclipse-temurin:21-jre-alpine
@@ -24,6 +27,9 @@ ENV PORT=8080
 ENV SPRING_PROFILES_ACTIVE=prod
 ENV ADMIN_EMAIL=hanamanttaranal19@gmail.com
 ENV ADMIN_PASSWORD=12345
+
+# Copy built jar file from build stage
+COPY --from=build /app/target/*.jar app.jar
 
 # Healthcheck endpoint
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
