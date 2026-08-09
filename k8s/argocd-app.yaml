@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fashion-club-app
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/hanamanttaranal/fashion-club-java-project-eks-argocd-jenkins.git'
+    targetRevision: HEAD
+    path: k8s
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: fashion-club
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
