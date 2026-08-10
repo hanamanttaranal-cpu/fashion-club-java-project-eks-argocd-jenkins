@@ -1,28 +1,26 @@
 # Multi-stage Dockerfile for Java Spring Boot Backend Service
-
-# --- Stage 1: Build Application with JDK 21 & Maven ---
 FROM maven:3.9-eclipse-temurin-21-alpine AS build
 WORKDIR /app
 
-# Copy Maven descriptor and download dependencies
-COPY backend/pom.xml ./pom.xml
-RUN mvn dependency:go-offline -B || true
+# Copy Maven POM and pre-fetch dependencies
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
 
-# Copy backend Java source code and build production jar
-COPY backend/src ./src
+# Copy backend source code and build jar
+COPY src ./src
 RUN mvn clean package -DskipTests
 
-# --- Stage 2: Production JRE Runtime ---
+# --- Production JRE Runtime Stage ---
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
-# Create dedicated non-root user
+# Non-root user for security
 RUN addgroup -S atelier && adduser -S atelier -G atelier
 USER atelier
 
 EXPOSE 8080
 
-# Configure Spring environment variables
+# Environment variables with practice dummy defaults
 ENV PORT=8080
 ENV SPRING_PROFILES_ACTIVE=prod
 ENV ADMIN_EMAIL=hanamanttaranal19@gmail.com
@@ -33,12 +31,11 @@ ENV DB_NAME=atelier_fashion_db
 ENV DB_USER=atelier_admin
 ENV DB_PASSWORD=atelier_dummy_secure_pass_123
 
-# Copy built jar file from build stage
+# Copy artifact from build stage
 COPY --from=build /app/target/*.jar app.jar
 
-# Healthcheck endpoint
+# Health Check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
 
-# Launch Java executable
 ENTRYPOINT ["java", "-jar", "app.jar"]

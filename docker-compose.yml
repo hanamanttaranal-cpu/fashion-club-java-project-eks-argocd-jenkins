@@ -2,69 +2,90 @@ version: '3.8'
 
 services:
   # ---------------------------------------------------
-  # 1. Frontend Web App Service (React + Tailwind)
+  # 1. Frontend Web App Service (React + Vite + Tailwind)
   # ---------------------------------------------------
   frontend:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: atelier_frontend
+    container_name: fashion_club_frontend
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - VITE_API_URL=http://localhost:8080/api
+      - VITE_API_BASE_URL=http://localhost:8080/api
     restart: always
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
     networks:
-      - atelier-network
+      - fashion-club-network
 
   # ---------------------------------------------------
-  # 2. Backend Service (Java Spring Boot REST API)
+  # 2. Backend API Service (Java 21 Spring Boot REST)
   # ---------------------------------------------------
   backend:
     build:
       context: .
       dockerfile: Dockerfile.backend
-    container_name: atelier_backend
+    container_name: fashion_club_backend
     ports:
       - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=prod
-      - DB_HOST=postgres
-      - DB_PORT=5432
+      - DB_HOST=mysql
+      - DB_PORT=3306
       - DB_NAME=atelier_fashion_db
       - DB_USER=atelier_admin
-      - DB_PASSWORD=atelier_secure_pass
+      - DB_PASSWORD=atelier_dummy_secure_pass_123
+      - DB_DRIVER=com.mysql.cj.jdbc.Driver
+      - DB_URL=jdbc:mysql://mysql:3306/atelier_fashion_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
       - ADMIN_EMAIL=hanamanttaranal19@gmail.com
       - ADMIN_PASSWORD=12345
+      - JWT_SECRET=dummyJwtSecretKeyForEksPractice2026AtelierFashionClub
+      - GEMINI_API_KEY=AIStudio_Dummy_Practice_Gemini_Key_2026
     depends_on:
-      - postgres
+      mysql:
+        condition: service_healthy
     restart: always
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
     networks:
-      - atelier-network
+      - fashion-club-network
 
   # ---------------------------------------------------
-  # 3. Database Service (PostgreSQL)
+  # 3. Relational Database Service (MySQL 8.0)
   # ---------------------------------------------------
-  postgres:
-    image: postgres:16-alpine
-    container_name: atelier_postgres
+  mysql:
+    image: mysql:8.0
+    container_name: fashion_club_mysql
     ports:
-      - "5432:5432"
+      - "3306:3306"
     environment:
-      - POSTGRES_DB=atelier_fashion_db
-      - POSTGRES_USER=atelier_admin
-      - POSTGRES_PASSWORD=atelier_secure_pass
+      - MYSQL_DATABASE=atelier_fashion_db
+      - MYSQL_USER=atelier_admin
+      - MYSQL_PASSWORD=atelier_dummy_secure_pass_123
+      - MYSQL_ROOT_PASSWORD=root_dummy_secure_pass_123
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mysql_data:/var/lib/mysql
     restart: always
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_dummy_secure_pass_123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
-      - atelier-network
+      - fashion-club-network
 
 networks:
-  atelier-network:
+  fashion-club-network:
     driver: bridge
 
 volumes:
-  postgres_data:
+  mysql_data:

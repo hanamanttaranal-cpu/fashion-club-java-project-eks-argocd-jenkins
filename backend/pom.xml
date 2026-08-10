@@ -49,6 +49,12 @@
         </dependency>
 
         <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
@@ -89,14 +95,4 @@
             </plugin>
         </plugins>
     </build>
-         <distributionManagement>
-        <repository>
-            <id>maven-releases</id>
-            <url>http://40.192.29.197:8081/repository/maven-releases/</url>
-        </repository>
-        <snapshotRepository>
-            <id>maven-snapshots</id>
-            <url>http://40.192.29.197:8081/repository/maven-snapshots/</url>
-        </snapshotRepository>
-    </distributionManagement>
 </project>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShoppingBag, Search, User, Shield, Code2, Menu, X, Heart, Sparkles, LogOut, Check } from 'lucide-react';
+import { ShoppingBag, Search, User, Shield, Code2, Menu, X, Heart, Sparkles, LogOut, Check, Key } from 'lucide-react';
 import { UserProfile } from '../types';
 
 interface NavbarProps {
@@ -9,6 +9,7 @@ interface NavbarProps {
   onOpenCart: () => void;
   onOpenAdmin: () => void;
   onOpenJavaInspector: () => void;
+  onOpenEnvStore: () => void;
   user: UserProfile | null;
   onOpenAuth: () => void;
   onSignOut: () => void;
@@ -25,6 +26,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenCart,
   onOpenAdmin,
   onOpenJavaInspector,
+  onOpenEnvStore,
   user,
   onOpenAuth,
   onSignOut,
@@ -130,6 +132,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
               )}
             </div>
+
+            {/* Environment Store Inspector Link */}
+            <button
+              onClick={onOpenEnvStore}
+              className="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-full text-xs font-mono font-medium transition-colors"
+              title="Inspect Environment Store Variables & DevOps Config"
+            >
+              <Key className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Env Store</span>
+            </button>
 
             {/* Java Architecture Inspector Quick Link */}
             <button

@@ -25,6 +25,7 @@ import { CartDrawer } from './components/CartDrawer';
 import { CheckoutModal } from './components/CheckoutModal';
 import { AdminPanel } from './components/AdminPanel';
 import { JavaBackendInspector } from './components/JavaBackendInspector';
+import { EnvStoreInspector } from './components/EnvStoreInspector';
 import { AuthModal } from './components/AuthModal';
 
 export default function App() {
@@ -66,6 +67,7 @@ export default function App() {
   const [checkoutDiscount, setCheckoutDiscount] = useState(0);
   const [adminOpen, setAdminOpen] = useState(false);
   const [javaInspectorOpen, setJavaInspectorOpen] = useState(false);
+  const [envStoreOpen, setEnvStoreOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
 
   // Sync Cart to LocalStorage
@@ -322,6 +324,7 @@ export default function App() {
         onOpenCart={() => setCartOpen(true)}
         onOpenAdmin={() => setAdminOpen(true)}
         onOpenJavaInspector={() => setJavaInspectorOpen(true)}
+        onOpenEnvStore={() => setEnvStoreOpen(!envStoreOpen)}
         user={user}
         onOpenAuth={() => setAuthOpen(true)}
         onSignOut={() => signOut(auth)}
@@ -329,7 +332,6 @@ export default function App() {
         onSearchChange={setSearchQuery}
         wishlistCount={wishlistIds.length}
         onOpenWishlist={() => {
-          // Quick view wishlisted items by filtering category or toast
           if (wishlistIds.length > 0) {
             alert(`You have ${wishlistIds.length} fashion items saved in your Wishlist!`);
           } else {
@@ -349,6 +351,13 @@ export default function App() {
           }}
           onOpenAdmin={() => setAdminOpen(true)}
         />
+
+        {/* Environment Variables Store Inspector Panel */}
+        {envStoreOpen && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <EnvStoreInspector />
+          </div>
+        )}
 
         {/* Java Spring Boot REST Architecture Inspector Banner (If opened) */}
         {javaInspectorOpen && (
@@ -407,8 +416,15 @@ export default function App() {
           </div>
 
           <div>
-            <h4 className="text-white uppercase font-bold mb-3 tracking-wider text-[11px]">Admin & Architecture</h4>
+            <h4 className="text-white uppercase font-bold mb-3 tracking-wider text-[11px]">Admin & Environment Store</h4>
             <div className="space-y-2">
+              <button
+                onClick={() => setEnvStoreOpen(!envStoreOpen)}
+                className="w-full py-2 bg-stone-800 hover:bg-stone-700 text-emerald-300 rounded-xl border border-stone-700 font-bold"
+              >
+                {envStoreOpen ? 'Hide Env Store' : 'Inspect Env Store Values'}
+              </button>
+
               <button
                 onClick={() => setAdminOpen(true)}
                 className="w-full py-2 bg-stone-800 hover:bg-stone-700 text-amber-400 rounded-xl border border-stone-700 font-bold"
@@ -418,7 +434,7 @@ export default function App() {
 
               <button
                 onClick={() => setJavaInspectorOpen(!javaInspectorOpen)}
-                className="w-full py-2 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded-xl border border-stone-700"
+                className="w-full py-2 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded-xl border border-stone-700 text-xs"
               >
                 {javaInspectorOpen ? 'Hide Java API Spec' : 'Inspect Java Spring Code'}
               </button>

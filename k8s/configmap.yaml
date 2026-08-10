@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fashion-club-config
+  namespace: fashion-club
+data:
+  SPRING_PROFILES_ACTIVE: "prod"
+  DB_HOST: "mysql-service"
+  DB_PORT: "3306"
+  DB_NAME: "atelier_fashion_db"
+  DB_DRIVER: "com.mysql.cj.jdbc.Driver"
+  DB_URL: "jdbc:mysql://mysql-service:3306/atelier_fashion_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true"
+  AWS_REGION: "us-east-1"
+  EKS_CLUSTER_NAME: "fashion-club-eks-cluster"
+  APP_URL: "http://fashion-club.example.com"
+  VITE_API_BASE_URL: "http://fashion-club-backend-service:8080/api"
