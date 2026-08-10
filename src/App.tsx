@@ -93,12 +93,13 @@ export default function App() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
+        const isAdminUser = firebaseUser.email?.toLowerCase() === 'hanamanttaranal19@gmail.com';
         setUser({
           uid: firebaseUser.uid,
           email: firebaseUser.email,
           displayName: firebaseUser.displayName,
           photoURL: firebaseUser.photoURL,
-          isAdmin: true, // Enable admin management features
+          isAdmin: isAdminUser,
         });
       } else {
         setUser(null);
@@ -372,6 +373,7 @@ export default function App() {
         
         {/* Editorial Hero Banner */}
         <HeroBanner
+          isAdmin={user?.isAdmin}
           onExplore={() => {
             const el = document.getElementById('catalog-section');
             el?.scrollIntoView({ behavior: 'smooth' });
@@ -493,12 +495,14 @@ export default function App() {
                 {envStoreOpen ? 'Hide Env Store' : 'Inspect Env Store Values'}
               </button>
 
-              <button
-                onClick={() => setAdminOpen(true)}
-                className="w-full py-2 bg-stone-800 hover:bg-stone-700 text-amber-400 rounded-xl border border-stone-700 font-bold"
-              >
-                Admin Image URL Manager
-              </button>
+              {user?.isAdmin && (
+                <button
+                  onClick={() => setAdminOpen(true)}
+                  className="w-full py-2 bg-stone-800 hover:bg-stone-700 text-amber-400 rounded-xl border border-stone-700 font-bold text-xs"
+                >
+                  Admin Panel
+                </button>
+              )}
 
               <button
                 onClick={() => setJavaInspectorOpen(!javaInspectorOpen)}
@@ -559,8 +563,8 @@ export default function App() {
         userName={user?.displayName || ''}
       />
 
-      {/* Admin Panel */}
-      {adminOpen && (
+      {/* Admin Panel (Only accessible for authenticated Admin users) */}
+      {adminOpen && user?.isAdmin && (
         <AdminPanel
           products={products}
           orders={orders}

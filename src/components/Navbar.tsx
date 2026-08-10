@@ -116,15 +116,17 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </div>
 
-            {/* Admin Panel Button */}
-            <button
-              onClick={onOpenAdmin}
-              className="flex items-center space-x-1 px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-200 border border-stone-700 rounded-full text-xs font-medium transition-colors"
-              title="Admin Panel"
-            >
-              <Shield className="w-3.5 h-3.5 text-amber-400" />
-              <span className="hidden sm:inline">Admin</span>
-            </button>
+            {/* Admin Panel Button - Only visible if logged in user is Admin */}
+            {user?.isAdmin && (
+              <button
+                onClick={onOpenAdmin}
+                className="flex items-center space-x-1 px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-200 border border-stone-700 rounded-full text-xs font-medium transition-colors"
+                title="Admin Panel"
+              >
+                <Shield className="w-3.5 h-3.5 text-amber-400" />
+                <span className="hidden sm:inline">Admin</span>
+              </button>
+            )}
 
             {/* Wishlist Button */}
             <button
@@ -191,16 +193,18 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <p className="font-semibold text-stone-100 truncate">{user.displayName || 'Fashion Shopper'}</p>
                     <p className="text-stone-400 truncate text-[11px]">{user.email}</p>
                   </div>
-                  <button
-                    onClick={() => {
-                      setUserDropdownOpen(false);
-                      onOpenAdmin();
-                    }}
-                    className="w-full text-left px-4 py-2 hover:bg-stone-800 text-stone-200 flex items-center space-x-2"
-                  >
-                    <Shield className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Admin Dashboard</span>
-                  </button>
+                  {user.isAdmin && (
+                    <button
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        onOpenAdmin();
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-stone-800 text-stone-200 flex items-center space-x-2"
+                    >
+                      <Shield className="w-3.5 h-3.5 text-amber-400" />
+                      <span>Admin Dashboard</span>
+                    </button>
+                  )}
                   <button
                     onClick={() => {
                       setUserDropdownOpen(false);
@@ -250,18 +254,20 @@ export const Navbar: React.FC<NavbarProps> = ({
             ))}
           </div>
 
-          <div className="pt-2 border-t border-stone-800 flex justify-end">
-            <button
-              onClick={() => {
-                onOpenAdmin();
-                setMobileMenuOpen(false);
-              }}
-              className="text-stone-200 text-xs flex items-center space-x-1"
-            >
-              <Shield className="w-4 h-4 text-amber-400" />
-              <span>Admin Panel</span>
-            </button>
-          </div>
+          {user?.isAdmin && (
+            <div className="pt-2 border-t border-stone-800 flex justify-end">
+              <button
+                onClick={() => {
+                  onOpenAdmin();
+                  setMobileMenuOpen(false);
+                }}
+                className="text-stone-200 text-xs flex items-center space-x-1"
+              >
+                <Shield className="w-4 h-4 text-amber-400" />
+                <span>Admin Panel</span>
+              </button>
+            </div>
+          )}
         </div>
       )}
     </header>

@@ -5,9 +5,10 @@ interface HeroBannerProps {
   onExplore: () => void;
   onOpenAdmin: () => void;
   onWatchFashionShow?: () => void;
+  isAdmin?: boolean;
 }
 
-export const HeroBanner: React.FC<HeroBannerProps> = ({ onExplore, onOpenAdmin, onWatchFashionShow }) => {
+export const HeroBanner: React.FC<HeroBannerProps> = ({ onExplore, onOpenAdmin, onWatchFashionShow, isAdmin }) => {
   return (
     <div className="relative bg-stone-950 text-white overflow-hidden rounded-3xl my-6 mx-4 sm:mx-6 lg:mx-8 border border-stone-800 shadow-2xl">
       {/* Background imagery with gradient overlay */}
@@ -54,13 +55,15 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExplore, onOpenAdmin, 
             </button>
           )}
 
-          <button
-            onClick={onOpenAdmin}
-            className="px-6 py-3.5 bg-stone-900/80 hover:bg-stone-800 text-stone-200 font-medium rounded-full text-xs border border-stone-700 flex items-center space-x-2 transition-all backdrop-blur-md"
-          >
-            <ImageIcon className="w-4 h-4 text-amber-400" />
-            <span>Admin Image URL Manager</span>
-          </button>
+          {isAdmin && (
+            <button
+              onClick={onOpenAdmin}
+              className="px-6 py-3.5 bg-stone-900/80 hover:bg-stone-800 text-stone-200 font-medium rounded-full text-xs border border-stone-700 flex items-center space-x-2 transition-all backdrop-blur-md"
+            >
+              <ImageIcon className="w-4 h-4 text-amber-400" />
+              <span>Admin Image URL Manager</span>
+            </button>
+          )}
         </div>
 
         {/* Feature Pill indicators */}
