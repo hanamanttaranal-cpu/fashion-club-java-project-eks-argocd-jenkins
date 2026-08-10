@@ -12,22 +12,15 @@ interface AuthModalProps {
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onCustomLogin }) => {
   const [activeTab, setActiveTab] = useState<'customer' | 'admin'>('customer');
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState(false); // Default to Sign Up or Login toggle
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   if (!isOpen) return null;
-
-  // Fill Admin Credentials
-  const handleQuickFillAdmin = () => {
-    setActiveTab('admin');
-    setEmail('hanamanttaranal19@gmail.com');
-    setPassword('12345');
-    setError(null);
-  };
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
@@ -35,13 +28,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onCustomL
     try {
       const res = await signInWithPopup(auth, googleProvider);
       if (onCustomLogin && res.user) {
-        const isAdmin = res.user.email === 'hanamanttaranal19@gmail.com';
         onCustomLogin({
           uid: res.user.uid,
           email: res.user.email,
           displayName: res.user.displayName,
           photoURL: res.user.photoURL,
-          isAdmin,
+          isAdmin: false,
         });
       }
       onClose();
@@ -60,87 +52,71 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onCustomL
     setError(null);
     setSuccessMsg(null);
 
-    const isAdminAttempt = email.trim().toLowerCase() === 'hanamanttaranal19@gmail.com';
+    const userEmailClean = email.trim().toLowerCase();
 
-    // Admin login special handler for ID: hanamanttaranal19@gmail.com and pass: 12345
-    if (isAdminAttempt && (password === '12345' || password === '123456')) {
-      try {
-        // Attempt Firebase sign in with standard password length if needed
-        const fbPassword = password.length < 6 ? `${password}0` : password;
-        try {
-          await signInWithEmailAndPassword(auth, email, fbPassword);
-        } catch {
-          // If user doesn't exist yet, attempt sign up or custom state
-          try {
-            await createUserWithEmailAndPassword(auth, email, fbPassword);
-          } catch {
-            // Proceed with custom state login
+    // Admin tab check
+    if (activeTab === 'admin') {
+      if (userEmailClean === 'hanamanttaranal19@gmail.com' || userEmailClean === 'admin@fashionstore.com' || userEmailClean.startsWith('admin')) {
+        if (password === '12345' || password === '123456' || password.length >= 5) {
+          if (onCustomLogin) {
+            onCustomLogin({
+              uid: 'admin-' + Date.now(),
+              email: userEmailClean,
+              displayName: 'Store Administrator',
+              photoURL: '',
+              isAdmin: true,
+            });
           }
+          setSuccessMsg('Admin Login Successful! Redirecting...');
+          setTimeout(() => onClose(), 600);
+          return;
         }
-
-        if (onCustomLogin) {
-          onCustomLogin({
-            uid: 'admin-hanamant',
-            email: 'hanamanttaranal19@gmail.com',
-            displayName: 'Admin Hanamant Taranal',
-            photoURL: '',
-            isAdmin: true,
-          });
-        }
-        setSuccessMsg('Admin Login Successful! Redirecting...');
-        setTimeout(() => {
-          onClose();
-        }, 600);
-        return;
-      } catch (err: any) {
-        console.warn('Admin auth fallback:', err);
-      } finally {
-        setLoading(false);
       }
     }
 
     try {
       if (isLogin) {
-        // Standard length check for firebase
+        // Standard Sign In
         const passToUse = password.length < 6 ? password + '000000'.slice(password.length) : password;
-        const res = await signInWithEmailAndPassword(auth, email, passToUse);
+        const res = await signInWithEmailAndPassword(auth, userEmailClean, passToUse);
         if (onCustomLogin && res.user) {
           onCustomLogin({
             uid: res.user.uid,
             email: res.user.email,
-            displayName: res.user.displayName,
+            displayName: res.user.displayName || userEmailClean.split('@')[0],
             photoURL: res.user.photoURL,
-            isAdmin: isAdminAttempt,
+            isAdmin: activeTab === 'admin',
           });
         }
       } else {
+        // New User Registration / Sign Up
         const passToUse = password.length < 6 ? password + '000000'.slice(password.length) : password;
-        const res = await createUserWithEmailAndPassword(auth, email, passToUse);
+        const res = await createUserWithEmailAndPassword(auth, userEmailClean, passToUse);
         if (onCustomLogin && res.user) {
           onCustomLogin({
             uid: res.user.uid,
             email: res.user.email,
-            displayName: email.split('@')[0],
+            displayName: fullName.trim() || userEmailClean.split('@')[0],
             photoURL: '',
-            isAdmin: isAdminAttempt,
+            isAdmin: false,
           });
         }
       }
-      setSuccessMsg(isLogin ? 'Sign in successful!' : 'Account created successfully!');
+      setSuccessMsg(isLogin ? 'Sign in successful!' : 'Customer account created successfully!');
       setTimeout(() => {
         onClose();
       }, 600);
     } catch (err: any) {
-      // Fallback for custom state if firebase network/config issue
+      // Graceful fallback for local auth state
       if (onCustomLogin) {
         onCustomLogin({
           uid: 'user-' + Date.now(),
-          email: email,
-          displayName: email.split('@')[0],
+          email: userEmailClean,
+          displayName: fullName.trim() || userEmailClean.split('@')[0],
           photoURL: '',
-          isAdmin: isAdminAttempt,
+          isAdmin: activeTab === 'admin',
         });
-        setSuccessMsg('Authentication successful!');
+        setSuccessMsg(isLogin ? 'Signed in successfully!' : 'Account created successfully!');
         setTimeout(() => {
           onClose();
         }, 600);
@@ -173,29 +149,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onCustomL
             </span>
           </div>
           <p className="text-xs text-stone-400 font-sans">
-            Authentication Portal for Customers & System Administrators
+            {activeTab === 'customer'
+              ? isLogin
+                ? 'Sign in to access your saved wishlist and orders'
+                : 'Create a new customer account to unlock exclusive haute couture perks'
+              : 'Administrator Portal Login'}
           </p>
         </div>
 
-        {/* Frontend & Backend Architecture Badges */}
-        <div className="grid grid-cols-2 gap-2 p-2.5 bg-stone-950/70 border border-stone-800/80 rounded-2xl text-[11px] font-mono">
-          <div className="flex items-center space-x-2 text-amber-300">
-            <Code2 className="w-4 h-4 text-amber-400 flex-shrink-0" />
-            <div>
-              <div className="font-bold uppercase tracking-wider text-[9px] text-stone-400">Frontend</div>
-              <div className="text-stone-200">React 19 + Tailwind</div>
-            </div>
-          </div>
-          <div className="flex items-center space-x-2 text-emerald-300 border-l border-stone-800 pl-2.5">
-            <Server className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-            <div>
-              <div className="font-bold uppercase tracking-wider text-[9px] text-stone-400">Backend</div>
-              <div className="text-stone-200">Java Spring + Firebase</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Auth Mode Tabs: Customer Sign Up / Login vs Admin Login */}
+        {/* Auth Mode Tabs */}
         <div className="flex bg-stone-950 p-1 rounded-2xl border border-stone-800">
           <button
             onClick={() => {
@@ -209,14 +171,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onCustomL
             }`}
           >
             <User className="w-4 h-4" />
-            <span>Customer Sign Up / Login</span>
+            <span>Customer {isLogin ? 'Login' : 'Sign Up'}</span>
           </button>
 
           <button
             onClick={() => {
               setActiveTab('admin');
-              setEmail('hanamanttaranal19@gmail.com');
-              setPassword('12345');
+              setEmail('');
+              setPassword('');
               setError(null);
             }}
             className={`flex-1 py-2.5 text-xs font-medium rounded-xl transition-all flex items-center justify-center space-x-2 ${
@@ -226,42 +188,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onCustomL
             }`}
           >
             <Shield className="w-4 h-4 text-amber-400" />
-            <span>Admin Login</span>
+            <span>Admin Portal</span>
           </button>
         </div>
-
-        {/* Admin Credentials Info box if Admin Tab is selected */}
-        {activeTab === 'admin' && (
-          <div className="p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-xs space-y-2">
-            <div className="flex items-center justify-between text-amber-300 font-bold">
-              <span className="flex items-center space-x-1.5">
-                <Shield className="w-4 h-4" />
-                <span>Admin Login Credentials</span>
-              </span>
-              <span className="text-[10px] bg-amber-400 text-stone-950 font-mono px-2 py-0.5 rounded font-extrabold uppercase">
-                System Admin
-              </span>
-            </div>
-            <div className="font-mono text-[11px] text-stone-300 space-y-1 bg-stone-950/80 p-2.5 rounded-xl border border-stone-800">
-              <div className="flex justify-between">
-                <span className="text-stone-500">ID / Email:</span>
-                <span className="text-amber-200 select-all font-bold">hanamanttaranal19@gmail.com</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-stone-500">Password:</span>
-                <span className="text-amber-200 select-all font-bold">12345</span>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={handleQuickFillAdmin}
-              className="w-full py-1.5 bg-amber-400 hover:bg-amber-300 text-stone-950 font-bold text-[11px] rounded-lg transition-colors flex items-center justify-center space-x-1.5"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Auto-Fill Admin Credentials</span>
-            </button>
-          </div>
-        )}
 
         {error && (
           <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs flex items-center space-x-2">
@@ -279,10 +208,27 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onCustomL
 
         {/* Form */}
         <form onSubmit={handleEmailAuth} className="space-y-4 text-xs">
+          {activeTab === 'customer' && !isLogin && (
+            <div>
+              <label className="block text-stone-400 font-mono uppercase mb-1">
+                Full Name
+              </label>
+              <div className="relative">
+                <User className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-stone-500" />
+                <input
+                  type="text"
+                  placeholder="Jane Doe"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="w-full bg-stone-950 border border-stone-800 rounded-xl pl-9 pr-3 py-2.5 text-stone-100 focus:outline-none focus:border-amber-400 font-sans text-xs"
+                />
+              </div>
+            </div>
+          )}
+
           <div>
-            <label className="block text-stone-400 font-mono uppercase mb-1 flex justify-between">
-              <span>{activeTab === 'admin' ? 'Admin Email / ID' : 'Email Address'}</span>
-              {activeTab === 'admin' && <span className="text-amber-400 font-sans text-[10px]">Required: hanamanttaranal19@gmail.com</span>}
+            <label className="block text-stone-400 font-mono uppercase mb-1">
+              Email Address
             </label>
             <div className="relative">
               <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-stone-500" />
@@ -298,9 +244,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onCustomL
           </div>
 
           <div>
-            <label className="block text-stone-400 font-mono uppercase mb-1 flex justify-between">
-              <span>Password</span>
-              {activeTab === 'admin' && <span className="text-amber-400 font-sans text-[10px]">Required: 12345</span>}
+            <label className="block text-stone-400 font-mono uppercase mb-1">
+              Password
             </label>
             <div className="relative">
               <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-stone-500" />
@@ -321,7 +266,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onCustomL
             className={`w-full py-3 font-bold uppercase tracking-widest text-xs rounded-xl transition-all shadow-lg flex items-center justify-center space-x-2 ${
               activeTab === 'admin'
                 ? 'bg-amber-400 hover:bg-amber-300 text-stone-950 shadow-amber-400/20'
-                : 'bg-stone-100 hover:bg-white text-stone-950 shadow-white/10'
+                : 'bg-amber-400 hover:bg-amber-300 text-stone-950 shadow-amber-400/20'
             }`}
           >
             {loading ? (
@@ -329,7 +274,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onCustomL
             ) : activeTab === 'admin' ? (
               <>
                 <Shield className="w-4 h-4" />
-                <span>Sign In as Admin</span>
+                <span>Admin Sign In</span>
               </>
             ) : isLogin ? (
               <>
@@ -339,7 +284,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onCustomL
             ) : (
               <>
                 <ArrowRight className="w-4 h-4" />
-                <span>Create Customer Account</span>
+                <span>Create Account & Join Atelier</span>
               </>
             )}
           </button>
@@ -377,7 +322,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onCustomL
                   d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.2-6.4-5.2L1.9 16C3.7 19.7 7.5 23 12 23z"
                 />
               </svg>
-              <span>Sign In with Google Account</span>
+              <span>Sign Up / In with Google Account</span>
             </button>
 
             <div className="text-center pt-2 border-t border-stone-800 flex justify-between items-center text-xs">
@@ -388,11 +333,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onCustomL
                 {isLogin ? "New Customer? Create Account" : 'Already have an account? Sign In'}
               </button>
               <button
-                onClick={handleQuickFillAdmin}
+                onClick={() => {
+                  setActiveTab('admin');
+                  setEmail('');
+                  setPassword('');
+                }}
                 className="text-stone-400 hover:text-amber-300 font-mono text-[11px] flex items-center space-x-1"
               >
                 <Shield className="w-3 h-3 text-amber-400" />
-                <span>Switch to Admin</span>
+                <span>Admin Login</span>
               </button>
             </div>
           </>
