@@ -136,6 +136,10 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
                   <img
                     src={hoveredProduct === product.id ? hoverImage : mainImage}
                     alt={product.name}
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800';
+                    }}
                     className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
                   />
 

@@ -4,9 +4,10 @@ import { Sparkles, ArrowRight, ShieldCheck, Image as ImageIcon } from 'lucide-re
 interface HeroBannerProps {
   onExplore: () => void;
   onOpenAdmin: () => void;
+  onWatchFashionShow?: () => void;
 }
 
-export const HeroBanner: React.FC<HeroBannerProps> = ({ onExplore, onOpenAdmin }) => {
+export const HeroBanner: React.FC<HeroBannerProps> = ({ onExplore, onOpenAdmin, onWatchFashionShow }) => {
   return (
     <div className="relative bg-stone-950 text-white overflow-hidden rounded-3xl my-6 mx-4 sm:mx-6 lg:mx-8 border border-stone-800 shadow-2xl">
       {/* Background imagery with gradient overlay */}
@@ -39,9 +40,19 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExplore, onOpenAdmin }
             onClick={onExplore}
             className="px-8 py-3.5 bg-amber-400 hover:bg-amber-300 text-stone-950 font-bold rounded-full text-xs uppercase tracking-widest flex items-center space-x-2 transition-all shadow-xl shadow-amber-400/20"
           >
-            <span>Explore Collection</span>
+            <span>Explore Store Collection</span>
             <ArrowRight className="w-4 h-4" />
           </button>
+
+          {onWatchFashionShow && (
+            <button
+              onClick={onWatchFashionShow}
+              className="px-6 py-3.5 bg-stone-900/90 hover:bg-amber-400 hover:text-stone-950 text-amber-300 font-bold rounded-full text-xs border border-amber-400/40 flex items-center space-x-2 transition-all backdrop-blur-md shadow-lg"
+            >
+              <Sparkles className="w-4 h-4 text-amber-400" />
+              <span>Watch Fashion Show 2026</span>
+            </button>
+          )}
 
           <button
             onClick={onOpenAdmin}

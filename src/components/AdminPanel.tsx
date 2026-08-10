@@ -82,9 +82,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
   const handleSubmitProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !price || imageUrls.length === 0) {
-      setMessage({ type: 'error', text: 'Please complete required fields (Title, Price, and at least 1 Image URL).' });
+    if (!name || !price) {
+      setMessage({ type: 'error', text: 'Please complete required fields (Title and Price).' });
       return;
+    }
+
+    let finalImages = imageUrls.map((url) => url.trim()).filter((url) => url.length > 0);
+    if (newImageUrl.trim().length > 0 && !finalImages.includes(newImageUrl.trim())) {
+      finalImages.push(newImageUrl.trim());
+    }
+    if (finalImages.length === 0) {
+      finalImages = ['https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1000'];
     }
 
     setLoading(true);
@@ -95,22 +103,22 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         price: parseFloat(price),
         originalPrice: originalPrice ? parseFloat(originalPrice) : undefined,
         category,
-        images: imageUrls.filter((url) => url.trim().length > 0),
+        images: finalImages,
         sizes: sizes.length > 0 ? sizes : ['One Size'],
         colors: colors.split(',').map((c) => c.trim()).filter((c) => c.length > 0),
         inStock: parseInt(stockCount) > 0,
         stockCount: parseInt(stockCount) || 0,
         featured,
-        rating: 5.0,
-        reviewCount: 0,
+        rating: editingProduct?.rating || 5.0,
+        reviewCount: editingProduct?.reviewCount || 0,
       };
 
       if (editingProduct) {
         await onUpdateProduct(editingProduct.id, productPayload);
-        setMessage({ type: 'success', text: `Product "${name}" updated successfully!` });
+        setMessage({ type: 'success', text: `Product "${name}" updated successfully with ${finalImages.length} images!` });
       } else {
         await onAddProduct(productPayload);
-        setMessage({ type: 'success', text: `New Fashion Product "${name}" added to catalog!` });
+        setMessage({ type: 'success', text: `New Fashion Product "${name}" added to catalog with ${finalImages.length} images!` });
       }
 
       resetForm();
@@ -288,6 +296,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                               <img
                                 src={prod.images && prod.images[0] ? prod.images[0] : 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=200'}
                                 alt={prod.name}
+                                referrerPolicy="no-referrer"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=200';
+                                }}
                                 className="w-full h-full object-cover"
                               />
                               {prod.images && prod.images.length > 1 && (

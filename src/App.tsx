@@ -26,6 +26,7 @@ import { CheckoutModal } from './components/CheckoutModal';
 import { AdminPanel } from './components/AdminPanel';
 import { JavaBackendInspector } from './components/JavaBackendInspector';
 import { EnvStoreInspector } from './components/EnvStoreInspector';
+import { FashionShowSection } from './components/FashionShowSection';
 import { AuthModal } from './components/AuthModal';
 
 export default function App() {
@@ -188,23 +189,51 @@ export default function App() {
 
   // Add product from Admin
   const handleAddProduct = async (productData: Omit<Product, 'id'>) => {
-    const productsRef = collection(db, 'products');
-    await addDoc(productsRef, {
-      ...productData,
-      createdAt: serverTimestamp(),
-    });
+    try {
+      const productsRef = collection(db, 'products');
+      const docRef = await addDoc(productsRef, {
+        ...productData,
+        createdAt: serverTimestamp(),
+      });
+      const newProd: Product = { id: docRef.id, ...productData };
+      setProducts((prev) => [newProd, ...prev]);
+    } catch (err) {
+      console.error('Error saving product to Firestore:', err);
+      // Local fallback
+      const localId = `local-${Date.now()}`;
+      const newProd: Product = { id: localId, ...productData };
+      setProducts((prev) => [newProd, ...prev]);
+    }
   };
 
   // Update product from Admin
   const handleUpdateProduct = async (id: string, productData: Partial<Product>) => {
-    const prodDocRef = doc(db, 'products', id);
-    await updateDoc(prodDocRef, productData);
+    try {
+      const prodDocRef = doc(db, 'products', id);
+      await updateDoc(prodDocRef, productData);
+    } catch (err) {
+      console.error('Error updating product in Firestore:', err);
+    }
+    setProducts((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, ...productData } : p))
+    );
+    if (selectedProduct && selectedProduct.id === id) {
+      setSelectedProduct((prev) => (prev ? { ...prev, ...productData } : null));
+    }
   };
 
   // Delete product from Admin
   const handleDeleteProduct = async (id: string) => {
-    const prodDocRef = doc(db, 'products', id);
-    await deleteDoc(prodDocRef);
+    try {
+      const prodDocRef = doc(db, 'products', id);
+      await deleteDoc(prodDocRef);
+    } catch (err) {
+      console.error('Error deleting product from Firestore:', err);
+    }
+    setProducts((prev) => prev.filter((p) => p.id !== id));
+    if (selectedProduct?.id === id) {
+      setSelectedProduct(null);
+    }
   };
 
   // Update order status from Admin
@@ -323,8 +352,6 @@ export default function App() {
         cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)}
         onOpenCart={() => setCartOpen(true)}
         onOpenAdmin={() => setAdminOpen(true)}
-        onOpenJavaInspector={() => setJavaInspectorOpen(true)}
-        onOpenEnvStore={() => setEnvStoreOpen(!envStoreOpen)}
         user={user}
         onOpenAuth={() => setAuthOpen(true)}
         onSignOut={() => signOut(auth)}
@@ -349,22 +376,21 @@ export default function App() {
             const el = document.getElementById('catalog-section');
             el?.scrollIntoView({ behavior: 'smooth' });
           }}
+          onWatchFashionShow={() => {
+            const el = document.getElementById('fashion-show-section');
+            el?.scrollIntoView({ behavior: 'smooth' });
+          }}
           onOpenAdmin={() => setAdminOpen(true)}
         />
 
-        {/* Environment Variables Store Inspector Panel */}
-        {envStoreOpen && (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <EnvStoreInspector />
-          </div>
-        )}
-
-        {/* Java Spring Boot REST Architecture Inspector Banner (If opened) */}
-        {javaInspectorOpen && (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <JavaBackendInspector products={products} />
-          </div>
-        )}
+        {/* Live Runway Fashion Show 2026 Showcase */}
+        <div id="fashion-show-section">
+          <FashionShowSection
+            products={products}
+            onSelectProduct={setSelectedProduct}
+            onAddToCart={handleAddToCart}
+          />
+        </div>
 
         {/* Product Catalog Grid */}
         <div id="catalog-section">
@@ -380,6 +406,48 @@ export default function App() {
         </div>
 
       </main>
+
+      {/* Environment Variables Store Inspector Modal Overlay */}
+      {envStoreOpen && (
+        <div className="fixed inset-0 z-50 bg-stone-950/90 backdrop-blur-lg overflow-y-auto p-4 sm:p-6 lg:p-8">
+          <div className="max-w-7xl mx-auto relative bg-stone-900 border border-stone-800 rounded-3xl shadow-2xl p-6 sm:p-8">
+            <div className="flex justify-between items-center mb-6 border-b border-stone-800 pb-4">
+              <div>
+                <h2 className="font-serif text-2xl font-bold text-emerald-400">Environment & DevOps Store Inspector</h2>
+                <p className="text-stone-400 text-xs font-mono">Live configuration state, MySQL credentials, & EKS manifests</p>
+              </div>
+              <button
+                onClick={() => setEnvStoreOpen(false)}
+                className="px-4 py-2 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded-full text-xs font-bold border border-stone-700"
+              >
+                Close Inspector ✕
+              </button>
+            </div>
+            <EnvStoreInspector />
+          </div>
+        </div>
+      )}
+
+      {/* Java Spring Boot REST Architecture Inspector Modal Overlay */}
+      {javaInspectorOpen && (
+        <div className="fixed inset-0 z-50 bg-stone-950/90 backdrop-blur-lg overflow-y-auto p-4 sm:p-6 lg:p-8">
+          <div className="max-w-7xl mx-auto relative bg-stone-900 border border-stone-800 rounded-3xl shadow-2xl p-6 sm:p-8">
+            <div className="flex justify-between items-center mb-6 border-b border-stone-800 pb-4">
+              <div>
+                <h2 className="font-serif text-2xl font-bold text-amber-400">Java Spring Boot 21 REST API Specs</h2>
+                <p className="text-stone-400 text-xs font-mono">Controllers, JPA Entities, MySQL Drivers, & Endpoint Test Runner</p>
+              </div>
+              <button
+                onClick={() => setJavaInspectorOpen(false)}
+                className="px-4 py-2 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded-full text-xs font-bold border border-stone-700"
+              >
+                Close Spec ✕
+              </button>
+            </div>
+            <JavaBackendInspector products={products} />
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <footer className="bg-stone-900 border-t border-stone-800 text-stone-400 py-12 px-4 sm:px-6 lg:px-8 mt-16 text-xs font-mono">

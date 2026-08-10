@@ -31,7 +31,7 @@ services:
       dockerfile: Dockerfile.backend
     container_name: fashion_club_backend
     ports:
-      - "8082:8080"
+      - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - DB_HOST=mysql

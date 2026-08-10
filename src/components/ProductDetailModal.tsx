@@ -88,6 +88,10 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 <img
                   src={selectedImage}
                   alt={product.name}
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1000';
+                  }}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
                 <button
